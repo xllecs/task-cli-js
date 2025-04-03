@@ -20,13 +20,21 @@ program
         }).replace(/\s+/g, '')
 
         if (camelizedStatus === Object.keys(options)[0]) {
-          console.log(`${title}: ${desc}, status: ${status}`)
+          console.log(
+            `title: ${title}
+description: ${desc}
+status: ${status}
+`)
         }
       })
     } else {
       tasks.forEach(task => {
         const { title, desc, status } = Object.values(task)[0]
-        console.log(`${title}: ${desc}, status: ${status}`)
+        console.log(
+          `title: ${title}
+description: ${desc}
+status: ${status}
+`)
       })
     }
   })
@@ -89,16 +97,12 @@ program
 
     for (let task of tasks) {
       if (Object.keys(task)[0] === taskId) {
-        if (options.title) {
-          Object.values(task)[0].title = title
-        }
-
-        if (options.desc) {
-          Object.values(task)[0].desc = desc
-        }
+        if (options.title) Object.values(task)[0].title = options.title
+        if (options.desc) Object.values(task)[0].desc = options.desc
 
         fs.writeFileSync('tasks.json', JSON.stringify(tasks), 'utf8')
         console.log('task updated successfully')
+
         return
       }
     }
@@ -106,15 +110,57 @@ program
     console.log('task not found')
   })
 
-// program
-//   .command('mark <todoId>')
-//   .option('--not-started')
-//   .option('--in-progress')
-//   .option('--done')
-//   .action((taskId, options) => {
-//     let tasks = JSON.parse(fs.readFileSync('tasks.json'))
+program
+  .command('mark <taskId>')
+  .option('--not-started')
+  .option('--in-progress')
+  .option('--done')
+  .action((taskId, options) => {
+    let tasks = JSON.parse(fs.readFileSync('tasks.json'))
 
+    for (let task of tasks) {
+      if (Object.keys(task)[0] === taskId) {
+        const camelizedStatus = Object.values(task)[0].status.replace(/\s./g, (match) => {
+          return match.toUpperCase()
+        }).replace(/\s+/g, '')
 
-//   })
+        if (options.notStarted) {
+          if (camelizedStatus === Object.keys(options)[0]) {
+            console.log('cannot mark task as not started since it was not started yet')
+            return
+          }
+
+          Object.values(task)[0].status = 'not started'
+          fs.writeFileSync('tasks.json', JSON.stringify(tasks), 'utf8')
+          console.log('status updated successfully')
+          return
+        }
+
+        if (options.inProgress) {
+          if (camelizedStatus === Object.keys(options)[0]) {
+            console.log('cannot mark task as in progress since it\'s already in progress')
+            return
+          }
+
+          Object.values(task)[0].status = 'in progress'
+          fs.writeFileSync('tasks.json', JSON.stringify(tasks), 'utf8')
+          console.log('status updated successfully')
+          return
+        }
+
+        if (options.done) {
+          if (camelizedStatus === Object.keys(options)[0]) {
+            console.log('cannot mark task as done since it\'s already done.')
+            return
+          }
+
+          Object.values(task)[0].status = 'done'
+          fs.writeFileSync('tasks.json', JSON.stringify(tasks), 'utf8')
+          console.log('status updated successfully')
+          return
+        }
+      }
+    }
+  })
 
 program.parse(process.argv)
