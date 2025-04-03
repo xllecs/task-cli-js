@@ -3,6 +3,20 @@
 import { program } from 'commander'
 import fs from 'fs'
 
+let tasks
+
+try {
+  tasks = JSON.parse(fs.readFileSync('tasks.json'))
+} catch (error) {
+  if (error.code === 'ENOENT') {
+    console.log('file not found. creating one for you...')
+    fs.appendFileSync('tasks.json', '[]', () => console.log('tasks.json created'))
+    tasks = []
+  } else {
+    throw error
+  }
+}
+
 program
   .command('list')
   .option('--not-started')
@@ -10,6 +24,11 @@ program
   .option('--done')
   .action(options => {
     let tasks = JSON.parse(fs.readFileSync('tasks.json'))
+
+    if (tasks.length === 0) {
+      console.log('there are no tasks')
+      return
+    }
 
     if (Object.keys(options).length !== 0) {
       tasks.forEach(task => {
@@ -42,7 +61,6 @@ status: ${status}
 program
   .command('add <title> <desc> [status]')
   .action((title, desc, status = 'not started') => {
-    let tasks = JSON.parse(fs.readFileSync('tasks.json'))
     let taskId = 1
 
     for (let task of tasks) {
